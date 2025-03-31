@@ -1,28 +1,17 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Headphones, Music, Users, Play, Radio, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { Appbar } from "@/app/components/Appbar"
+import { Appbar } from "@/app/components/Appbar";
+import { Redirect } from "@/app/components/Redirect";
 
 export default function MusicStreamingLanding() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    // Add dark class to html element for dark mode
-    document.documentElement.classList.add("dark");
-  }, []);
-
-  if (!mounted) return null;
-
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground dark:bg-gray-950 dark:text-gray-100">
       {/* Appbar now handles navigation & authentication buttons */}
       <Appbar />
+      <Redirect/>
 
       <main className="flex-1">
         {/* Hero Section */}
