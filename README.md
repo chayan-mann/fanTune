@@ -1,3 +1,9 @@
+# FanTune
+
+A music streaming application where people can get together and listen to songs based on upvotes and downvotes and SO MUCH MORE....
+
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
