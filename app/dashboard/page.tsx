@@ -1,47 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThumbsUp, ThumbsDown, Play, Share2 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+import LiteYoutubeEmbed from 'react-lite-youtube-embed';
+// import 'react-lite-youtube-embed/dist/LiteYoutubeEmbed.css'
+import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
+
+import { YT_REGEX } from "../lib/utils";
 
 interface Video {
-  id: string;
-  title: string;
-  upvotes: number;
-  downvotes: number;
-  thumbnail: string;
+  "id": string;
+  "type" : string,
+  "url" : string,
+  "extractedId" : string,
+  "title": string,
+  "smallImg": string,
+  "bigImg" : string,
+  "active" : boolean,
+  "userId" : string,
+  "upvotes" : number,
+  "haveUpvoted" : boolean
 }
+
+const REFRESH_INTERVAL_MS = 10 * 1000;
 
 export default function Component() {
   const [inputLink, setInputLink] = useState("");
-  const [queue, setQueue] = useState<Video[]>([
-    {
-      id: "1",
-      title: "Awesome Song 1",
-      upvotes: 5,
-      downvotes: 1,
-      thumbnail: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg", // Example YouTube thumbnail
-    },
-    {
-      id: "2",
-      title: "Cool Music Video",
-      upvotes: 3,
-      downvotes: 0,
-      thumbnail: "https://i.ytimg.com/vi/3JZ_D3ELwOQ/hqdefault.jpg",
-    },
-    {
-      id: "3",
-      title: "Top Hit 2023",
-      upvotes: 2,
-      downvotes: 1,
-      thumbnail: "https://i.ytimg.com/vi/V-_O7nl0Ii0/hqdefault.jpg",
-    },
-  ]);
+  const [queue, setQueue] = useState<Video[]>([])
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
+
+
+  async function refreshStreams(){
+    const res = await fetch(`api/streams/my`,{
+      credentials: "include"
+    });
+    const json = await res.json();
+    setQueue(json.streams);
+  }
+
+  useEffect(()=>{
+    refreshStreams();
+    const interval = setInterval(()=>{
+
+    }, REFRESH_INTERVAL_MS)
+    }, [])
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,11 +60,9 @@ export default function Component() {
       id: String(queue.length + 1),
       title: `New Song ${queue.length + 1}`,
       upvotes: 0,
-      downvotes: 0,
-      thumbnail: "https://via.placeholder.com/150", // Placeholder image for new entries
     };
     setQueue([...queue, newVideo]);
-    setInputLink("");
+    setInputLink('');
   };
 
   const handleVote = (id: string, isUpvote: boolean) => {
@@ -65,13 +72,19 @@ export default function Component() {
           video.id === id
             ? {
                 ...video,
-                upvotes: isUpvote ? video.upvotes + 1 : video.upvotes,
-                downvotes: !isUpvote ? video.downvotes + 1 : video.downvotes,
+                upvotes: isUpvote ? video.upvotes + 1 : video.upvotes-1,
+                haveUpvoted : !video.haveUpvoted
               }
             : video
         )
-        .sort((a, b) => b.upvotes - b.downvotes - (a.upvotes - a.downvotes))
+        .sort((a, b) => b.upvotes - (a.upvotes))
     );
+    fetch(`/api/streams/${isUpvote ? "upvote" : "downvote"}`, {
+      method : "POST",
+      body: JSON.stringify({
+        streamId : id
+      })
+    })
   };
 
   const playNext = () => {
@@ -116,13 +129,34 @@ export default function Component() {
           onChange={(e) => setInputLink(e.target.value)}
           className="flex-1 bg-gray-900 border-gray-800 text-white placeholder-gray-500 focus:ring-purple-500"
         />
-        <Button
+        <Button onClick={() =>{
+          fetch("api/streams", {
+            method : "POST",
+            body: JSON.stringify({
+              creatorId : "creatorId" ,
+              url : inputLink
+            })
+          })
+        }}
           type="submit"
           className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0"
         >
           Add to Queue
         </Button>
       </form>
+
+      {inputLink && YT_REGEX.test(inputLink) && (
+        <Card className="bg-gray-900 border-gray-800 mt-6 w-full max-w-2xl">
+          <CardContent className="p-4">
+            <LiteYoutubeEmbed
+              id={inputLink.match(YT_REGEX)?.[1] || ""}
+              title="Video Preview"
+            />
+            <p className="mt-2 text-center text-gray-400">Video Preview</p>
+          </CardContent>
+        </Card>
+      )}
+
 
       {/* Now Playing Section */}
       <div className="mt-8 w-full max-w-2xl">
@@ -132,7 +166,7 @@ export default function Component() {
             {currentVideo ? (
               <>
                 <img
-                  src={currentVideo.thumbnail}
+                  src={currentVideo.bigImg}
                   alt="Current video"
                   className="w-full h-72 object-cover rounded"
                 />
@@ -156,30 +190,22 @@ export default function Component() {
             <Card key={video.id} className="bg-gray-900 border-gray-800 text-white">
               <CardContent className="p-4 flex items-center gap-4">
                 <img
-                  src={video.thumbnail}
+                  src={video.bigImg}
                   alt={video.title}
                   className="w-40 h-25 object-cover rounded"
                 />
                 <div className="flex-1">
                   <p className="text-lg font-semibold">{video.title}</p>
                   <div className="flex items-center space-x-3 mt-2">
+                    
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleVote(video.id, true)}
+                      onClick={() => handleVote(video.id, video.haveUpvoted? false: true)}
                       className="flex items-center space-x-1 bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
                     >
-                      <ThumbsUp className="h-4 w-4" />
+                      {video.haveUpvoted ? <ThumbsDown className="h-4 w-4" /> : <ThumbsUp className="h-4 w-4" />}
                       <span>{video.upvotes}</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleVote(video.id, false)}
-                      className="flex items-center space-x-1 bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
-                    >
-                      <ThumbsDown className="h-4 w-4" />
-                      <span>{video.downvotes}</span>
                     </Button>
                   </div>
                 </div>
