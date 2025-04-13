@@ -54,6 +54,7 @@ export default function MusicStreamingLanding() {
                   src="/images/image.png"
                   width={550}
                   height={550}
+                  priority
                   alt="Music streaming interface showing fan interaction"
                   className="relative mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last border border-gray-800 bg-gray-900"
                 />
