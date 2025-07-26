@@ -8,7 +8,7 @@ export function Redirect(){
     const router = useRouter();
     useEffect(() => {
         if(session?.data?.user){
-            router.push("/dashboard");
+            router.push("/");
         }
     }, [session])
     return null;
