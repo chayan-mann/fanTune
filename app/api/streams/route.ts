@@ -3,7 +3,10 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { prismaClient } from "@/app/lib/db";
 import { YT_REGEX } from "@/app/lib/utils";
+import getVideoId from "get-video-id"; 
+
 //@ts-ignore
+
 import youtubesearchapi from "youtube-search-api";
 const CreateStreamSchema = z.object({
     creatorId : z.string(),
@@ -22,10 +25,29 @@ export async function POST(req: NextRequest) {
             })
         }
 
-        const extractedId = data.url.split("?v=")[1];
+        const { id: extractedId } = getVideoId(data.url);
+
+        if (!extractedId) {
+            return NextResponse.json({ message: "Invalid YouTube URL" }, { status: 400 });
+        }
+
         const res = await youtubesearchapi.GetVideoDetails(extractedId);
+
+        if (!res || !res.thumbnail?.thumbnails || !Array.isArray(res.thumbnail.thumbnails)) {
+            return NextResponse.json({
+                message: "Failed to fetch video details"
+            }, {
+                status: 400
+            });
+        }
         const thumbnails = res.thumbnail.thumbnails;
+
         thumbnails.sort((a: {width:number}, b:{width:number}) => a.width < b.width ? -1: 1);
+
+        const user = await prismaClient.user.findUnique({
+            where: { id: '78354061-7ca9-4b02-b21e-ada3c0b3cf3c' }
+        });
+        console.log(user)
 
         const stream = await prismaClient.stream.create({
             data :{
