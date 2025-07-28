@@ -1,24 +1,21 @@
-import StreamView from "@/app/components/StreamView";
+// app/creator/[creatorId]/page.tsx
 
-// Define the expected shape of the props for this page
+// Define the props type explicitly
 type CreatorPageProps = {
   params: {
     creatorId: string;
   };
-  searchParams: { [key: string]: string | string[] | undefined };
 };
 
+// This is the simplest possible server component for this route
 export default function CreatorPage({ params }: CreatorPageProps) {
   const { creatorId } = params;
 
-  // You can add a check here in case the ID is missing for some reason
-  if (!creatorId) {
-    return <div>Loading creator...</div>;
-  }
-
   return (
-    <div>
-      <StreamView creatorId={creatorId} />
+    <div style={{ padding: '40px', color: 'white', backgroundColor: 'black', minHeight: '100vh' }}>
+      <h1>Creator Page</h1>
+      <p>If you can see this, the page is working.</p>
+      <p>The creator ID from the URL is: <strong>{creatorId}</strong></p>
     </div>
   );
 }
