@@ -416,7 +416,7 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
                         <Music className="w-12 h-12" />
                       </div>
                       <p className="text-xl font-medium">No song playing</p>
-                      <p className="text-sm text-gray-500 mt-2">Click "Play Next" to start the party!</p>
+                      <p className="text-sm text-gray-500 mt-2">{'Click "Play Next" to start the party!'}</p>
                     </div>
                   )}
                 </div>

@@ -116,12 +116,11 @@ export default function HeroSection(){
                       Choose Your
                     </span>
                     <br />
-                    <span className="text-white">Stream's Music</span>
+                    <span className="text-white">{"Stream's Music"}</span>
                   </motion.h1>
 
                   <motion.p className="max-w-[600px] text-xl text-gray-900 leading-relaxed" variants={itemVariants}>
-                    FanTune connects creators with their audience through music. Let your fans vote on songs and
-                    influence your stream's soundtrack in real-time with our revolutionary platform.
+                    {"FanTune connects creators with their audience through music. Let your fans vote on songs and influence your stream's soundtrack in real-time with our revolutionary platform."}
                   </motion.p>
                 </motion.div>
 

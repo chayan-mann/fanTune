@@ -97,7 +97,7 @@ export default function Pricing() {
                         className={`w-full ${plan.popular ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" : "bg-gray-800 hover:bg-gray-700"} text-white border-0`}
                         size="lg"
                       >
-                        Get Started
+                        Let&apos;s Get Started
                       </Button>
                     </CardContent>
                   </Card>
