@@ -2,50 +2,56 @@ import { prismaClient } from "@/app/lib/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"; 
+import { Prisma } from "@prisma/client"; 
 
-const UpvoteSchema = z.object({
-  streamId: z.string(),
+const DownvoteSchema = z.object({
+  streamId: z.string().uuid("Invalid Stream ID format"),
 });
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
 
-  const user = await prismaClient.user.findFirst({
-    where: {
-      email : session?.user?.email ?? ""
-    }
-  })
-
-  if(!user){
-    return NextResponse.json({
-      message : "Unauthorized"
-    },{
-       status : 403
-    })
+  if (!userId) {
+    return NextResponse.json(
+      { message: "Unauthorized" },
+      { status: 403 }
+    );
   }
 
   try {
-    const data = UpvoteSchema.parse(await req.json());
+    const data = DownvoteSchema.parse(await req.json());
+
     await prismaClient.upvote.delete({
       where: {
         userId_streamId: {
-          userId: user.id,
+          userId: userId,
           streamId: data.streamId,
         },
       },
     });
-    return NextResponse.json({
-      message : "Done!"
-    })
+
+    return NextResponse.json({ message: "Vote removed successfully!" });
 
   } catch (e) {
+    if (e instanceof z.ZodError) {
+      return NextResponse.json({ message: e.errors[0].message }, { status: 400 });
+    }
+    
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      if (e.code === 'P2025') {
+        return NextResponse.json(
+          { message: "You have not upvoted this stream." },
+          { status: 404 } // 404 Not Found 
+        );
+      }
+    }
+
+    console.error(e); 
     return NextResponse.json(
-      {
-        message: "Error while upvoting",
-      },
-      {
-        status: 403,
-      },
+      { message: "An error occurred while removing the vote." },
+      { status: 500 }
     );
   }
 }

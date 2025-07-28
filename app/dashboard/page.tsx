@@ -1,38 +1,31 @@
-"use client";
 
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { ThumbsUp, ThumbsDown, Play, Share2 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
-import LiteYoutubeEmbed from 'react-lite-youtube-embed';
-// import 'react-lite-youtube-embed/dist/LiteYoutubeEmbed.css'
-import 'react-lite-youtube-embed/dist/LiteYouTubeEmbed.css';
-import StreamView from "../components/StreamView";
+import StreamView from "@/app/components/StreamView";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"; 
+import { redirect } from "next/navigation";
+import { Appbar } from "../components/Appbar";
+export default async function DashboardPage() {
+    
+    const session = await getServerSession(authOptions);
 
-import { YT_REGEX } from "../lib/utils";
-import { randomUUID } from "crypto";
+    if (!session || !session.user) {
+        redirect("/api/auth/signin"); 
+    }
+    
+    //Get the creator's ID from the session object.
+    // The path might be `session.user.id`, `session.user.sub`, etc.,
+    const creatorId = session.user.id; 
 
-interface Video {
-  "id": string;
-  "type" : string,
-  "url" : string,
-  "extractedId" : string,
-  "title": string,
-  "smallImg": string,
-  "bigImg" : string,
-  "active" : boolean,
-  "userId" : string,
-  "upvotes" : number,
-  "haveUpvoted" : boolean
-}
+    if (!creatorId) {
+        return <div>Error: Could not find user ID. Please log in again.</div>
+    }
 
-const REFRESH_INTERVAL_MS = 10 * 1000;
-const creatorId = "fe296b7d-96b1-458e-a1b4-0a4afbaa8a3f"
-
-export default function Component() {
-  return <StreamView creatorId= {creatorId} />
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+            <Appbar/>
+            <main className="pt-16 ">
+              <StreamView creatorId={creatorId} />
+            </main>
+        </div>
+    );
 }
