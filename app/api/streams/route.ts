@@ -5,7 +5,6 @@ import { z } from "zod";
 import { prismaClient } from "@/app/lib/db";
 import { YT_REGEX } from "@/app/lib/utils";
 import getVideoId from "get-video-id";
-//@ts-ignore
 import youtubesearchapi from "youtube-search-api";
 
 const CreateStreamSchema = z.object({

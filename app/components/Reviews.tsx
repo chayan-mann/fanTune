@@ -95,7 +95,7 @@ export function TestimonialsSection() {
                     </div>
                     <Quote className="h-8 w-8 text-purple-500 mb-4" />
                     <p className="text-black mb-6 italic">
-                      "{testimonial.content}"
+                      {`"${testimonial.content}"`}
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-purple-500/20">
