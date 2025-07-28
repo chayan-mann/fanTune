@@ -249,7 +249,7 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
       const res = await fetch(`/api/streams?creatorId=${creatorId}`)
       if (!res.ok) throw new Error("Failed to fetch queue")
       const json = await res.json()
-      setQueue(json.streams.sort((a: any, b: any) => b.upvotes - a.upvotes))
+      setQueue(json.streams.sort((a: Video, b: Video) => b.upvotes - a.upvotes))
     } catch (error) {
       console.error(error)
       toast.error("Could not refresh the queue.")
