@@ -1,12 +1,12 @@
 import StreamView from "@/app/components/StreamView";
 
-interface PageProps {
-  params: {
-    creatorId: string;
-  };
-}
+export const dynamic = 'force-dynamic'; // Optional but fine
 
-export default function CreatorPage({ params }: PageProps) {
+export default function CreatorPage({
+  params,
+}: {
+  params: { creatorId: string };
+}) {
   return (
     <div>
       <StreamView creatorId={params.creatorId} />
