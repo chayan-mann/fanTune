@@ -2,8 +2,9 @@ import { prismaClient } from "@/app/lib/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; 
 import { Prisma } from "@prisma/client"; 
+import { authOptions } from "@/app/lib/auth"; 
+
 
 const UpvoteSchema = z.object({
   streamId: z.string().uuid("Invalid Stream ID format"),

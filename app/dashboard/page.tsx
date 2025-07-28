@@ -1,7 +1,7 @@
 
 import StreamView from "@/app/components/StreamView";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; 
+import { authOptions } from "@/app/lib/auth"; 
 import { redirect } from "next/navigation";
 import { Appbar } from "../components/Appbar";
 export default async function DashboardPage() {
