@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
     const creatorId = session.user.id; // creator ID
 
     try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const youtubesearchapi = require("youtube-search-api");
 
         const body = await req.json();
