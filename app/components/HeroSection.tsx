@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, useScroll, useTransform, useInView } from "framer-motion"
+import { motion,Variants, useScroll, useTransform, useInView } from "framer-motion"
 import { useRef, useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -52,7 +52,7 @@ const FloatingParticles = () => {
 
 
 export default function HeroSection(){
-    const { scrollYProgress } = useScroll()
+  const { scrollYProgress } = useScroll()
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
 
@@ -66,14 +66,14 @@ export default function HeroSection(){
     },
   }
 
-  const itemVariants = {
+  const itemVariants : Variants = {
     hidden: { y: 20, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
       transition: {
         duration: 0.6,
-        ease: "easeOut", // "easeOut" is a valid keyword for framer-motion
+        ease: "easeOut", 
       },
     },
   }

@@ -1,21 +1,51 @@
-// app/creator/[creatorId]/page.tsx
+// import StreamView from "@/app/components/StreamView"
 
-// Define the props type explicitly
-type CreatorPageProps = {
-  params: {
-    creatorId: string;
-  };
+// export default function({
+//     params :{
+//         creatorId
+//     } 
+// }: {
+//     params : {
+//         creatorId : string,
+//     }
+// }) {
+//     return <div>
+//         <StreamView creatorId={creatorId}/>
+//     </div>
+// }
+
+import StreamView from "@/app/components/StreamView";
+import type { Metadata } from 'next'
+
+// Define the expected shape of the props for Next.js 15+
+// Note that `params` is now wrapped in a Promise.
+type Props = {
+  params: Promise<{ creatorId: string }>;
 };
 
-// This is the simplest possible server component for this route
-export default function CreatorPage({ params }: CreatorPageProps) {
-  const { creatorId } = params;
+// Optional: Add generateMetadata using the new async params
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  // Read route params by awaiting the promise
+  const { creatorId } = await params;
+ 
+  return {
+    title: `Creator Stream | ${creatorId}`, // Example dynamic title
+  }
+}
+
+// The component must be async to handle the new promise-based props
+export default async function CreatorPage({
+  params,
+}: {
+  // The `params` object is now a Promise
+  params: Promise<{ creatorId: string }>;
+}) {
+  // We must await the promise to get the values
+  const { creatorId } = await params;
 
   return (
-    <div style={{ padding: '40px', color: 'white', backgroundColor: 'black', minHeight: '100vh' }}>
-      <h1>Creator Page</h1>
-      <p>If you can see this, the page is working.</p>
-      <p>The creator ID from the URL is: <strong>{creatorId}</strong></p>
+    <div>
+      <StreamView creatorId={creatorId} />
     </div>
   );
 }
