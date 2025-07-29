@@ -12,6 +12,8 @@ const CreateStreamSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+    console.log("Received POST request to /api/streams"); // Initial log
+
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
         return NextResponse.json({ message: "Unauthenticated" }, { status: 403 });
@@ -19,19 +21,25 @@ export async function POST(req: NextRequest) {
     const creatorId = session.user.id; // creator ID
 
     try {
+
+        const body = await req.json();
+        console.log("Request body received:", body); // Log the incoming data
+
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const youtubesearchapi = require("youtube-search-api");
 
-        const body = await req.json();
         const data = CreateStreamSchema.parse(body);
+        console.log("Zod parsing successful.");
 
         const { id: extractedId } = getVideoId(data.url);
         if (!extractedId) {
+            console.log("Could not extract video ID from URL:", data.url);
             return NextResponse.json({ message: "Invalid YouTube URL" }, { status: 400 });
         }
 
         const res = await youtubesearchapi.GetVideoDetails(extractedId);
         if (!res?.thumbnail?.thumbnails) {
+            console.log("Failed to get video details from YouTube API.");
             return NextResponse.json({ message: "Failed to fetch video details" }, { status: 400 });
         }
         
@@ -57,9 +65,10 @@ export async function POST(req: NextRequest) {
 
     } catch (e) {
         if (e instanceof z.ZodError) {
+            console.error("Zod validation failed:", e.errors);
             return NextResponse.json({ message: e.errors[0].message }, { status: 400 });
         }
-        console.error(e);
+        console.error("An unexpected error occurred in POST /api/streams:", e);
         return NextResponse.json({ message: "Error while adding a stream" }, { status: 500 });
     }
 }
