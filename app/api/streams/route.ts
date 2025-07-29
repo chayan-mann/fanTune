@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prismaClient } from "@/app/lib/db";
 import { YT_REGEX } from "@/app/lib/utils";
 import getVideoId from "get-video-id";
-import youtubesearchapi from "youtube-search-api";
+// import youtubesearchapi from "youtube-search-api";
 
 const CreateStreamSchema = z.object({
     url: z.string().regex(YT_REGEX, { message: "Invalid YouTube URL format" })
@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
     const creatorId = session.user.id; // creator ID
 
     try {
+        const youtubesearchapi = require("youtube-search-api");
+
         const body = await req.json();
         const data = CreateStreamSchema.parse(body);
 
