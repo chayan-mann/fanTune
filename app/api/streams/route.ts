@@ -36,11 +36,14 @@ export async function POST(req: NextRequest) {
             console.log("Could not extract video ID from URL:", data.url);
             return NextResponse.json({ message: "Invalid YouTube URL" }, { status: 400 });
         }
+        // Set the API key before making the request
+        youtubesearchapi.SetKey(process.env.YOUTUBE_API_KEY);
+
 
         const res = await youtubesearchapi.GetVideoDetails(extractedId);
-        if (!res?.thumbnail?.thumbnails) {
-            console.log("Failed to get video details from YouTube API.");
-            return NextResponse.json({ message: "Failed to fetch video details" }, { status: 400 });
+        if (!res || !res?.thumbnail?.thumbnails) {
+            console.error("YouTube API response was invalid:", res);
+            return NextResponse.json({ message: "Failed to fetch video details from YouTube" }, { status: 502 });
         }
         
         const thumbnails = res.thumbnail.thumbnails.sort((a: {width:number}, b:{width:number}) => a.width - b.width);
