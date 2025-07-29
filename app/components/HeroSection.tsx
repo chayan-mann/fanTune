@@ -79,7 +79,7 @@ export default function HeroSection(){
   }
 
     return(
-        <section className="relative w-full py-20 md:py-32 lg:py-40 xl:py-48 bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-900 overflow-hidden">
+        <section className="relative w-full py-28 md:py-24 lg:py-28 xl:py-32 bg-gradient-to-br from-gray-950 via-purple-950/20 to-gray-900 overflow-hidden">
           {/* Animated background elements */}
           <div className="absolute inset-0 w-full h-full">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
@@ -96,27 +96,23 @@ export default function HeroSection(){
               <motion.div className="flex flex-col justify-center space-y-8" variants={itemVariants}>
                 <motion.div className="space-y-6" variants={itemVariants}>
                   <motion.div
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 backdrop-blur-sm"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 backdrop-blur-sm"
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
                     <Sparkles className="h-4 w-4 text-purple-400" />
-                    <span className="text-sm font-medium text-purple-300">Revolutionizing Stream Interaction</span>
+                    <span className="text-xs sm:text-sm font-medium text-purple-300 text-center">Revolutionizing Stream Interaction</span>
                   </motion.div>
 
                   <motion.h1
                     className="text-5xl font-bold tracking-tighter sm:text-6xl xl:text-7xl/none"
                     variants={itemVariants}
                   >
-                    <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 bg-clip-text text-transparent">
-                      Let Your Fans
-                    </span>
-                    <br />
                     <span className="bg-gradient-to-r from-pink-400 via-purple-500 to-pink-600 bg-clip-text text-transparent">
-                      Choose Your
+                      Turn Your Viewers Into DJs.
                     </span>
                     <br />
-                    <span className="text-white">{"Stream's Music"}</span>
+                    <span className="text-white">{"Your Stream, Their Soundtrack"}</span>
                   </motion.h1>
 
                   <motion.p className="max-w-[600px] text-xl text-gray-900 leading-relaxed" variants={itemVariants}>
