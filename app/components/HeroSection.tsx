@@ -1,7 +1,6 @@
 "use client"
 
-import { motion,Variants, useScroll, useTransform, useInView } from "framer-motion"
-import { useRef, useEffect, useState } from "react"
+import { motion,Variants, useScroll, useTransform } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -11,44 +10,6 @@ import {
   Star,
   Sparkles,
 } from "lucide-react"
-
-
-const FloatingParticles = () => {
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
-
-  useEffect(() => {
-    setDimensions({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    })
-  }, [])
-
-  if (dimensions.width === 0) return null
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-purple-500/30 rounded-full"
-          initial={{
-            x: Math.random() * dimensions.width,
-            y: Math.random() * dimensions.height,
-          }}
-          animate={{
-            x: Math.random() * dimensions.width,
-            y: Math.random() * dimensions.height,
-          }}
-          transition={{
-            duration: Math.random() * 10 + 20,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
-        />
-      ))}
-    </div>
-  )
-}
 
 
 export default function HeroSection(){
@@ -121,13 +82,13 @@ export default function HeroSection(){
                 </motion.div>
 
                 <motion.div className="flex flex-col gap-4 min-[400px]:flex-row" variants={itemVariants}>
-                  <Link href="/signup">
+                  <Link href="/dashboard">
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Button
                         size="lg"
                         className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 px-8 py-6 text-lg font-semibold shadow-2xl shadow-purple-500/25"
                       >
-                        Get Started Free <ArrowRight className="h-5 w-5" />
+                        Get Started <ArrowRight className="h-5 w-5" />
                       </Button>
                     </motion.div>
                   </Link>
@@ -136,8 +97,7 @@ export default function HeroSection(){
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <Button
                         size="lg"
-                        variant="outline"
-                        className="gap-2 border-2 border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-300 px-8 py-6 text-lg font-semibold backdrop-blur-sm bg-transparent"
+                        className="gap-2 border border-purple-500/50 hover:bg-purple-500/10 hover:text-white px-8 py-6 text-lg font-semibold backdrop-blur-sm bg-transparent"
                       >
                         Watch Demo <Play className="h-5 w-5" />
                       </Button>

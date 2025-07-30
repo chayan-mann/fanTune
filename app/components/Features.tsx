@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Music, Users, Headphones, Zap, Shield, TrendingUp } from "lucide-react";
+import Image from "next/image"; // ✅ Add this import
 
 type Feature = {
   icon: React.ElementType;
@@ -78,11 +79,13 @@ const SmallFeatureCard = ({ feature, index }: SmallFeatureCardProps) => (
           <h3 className="text-xl font-semibold text-center tracking-tight text-white">{feature.title}</h3>
           <p className="text-gray-400 text-center leading-relaxed">{feature.description}</p>
         </div>
-        <div className="mt-4 flex-grow rounded-lg bg-gray-900/50 overflow-hidden">
-          <img 
-            src={feature.image} 
-            alt={feature.title} 
-            className="w-full h-full object-cover" 
+        <div className="mt-4 relative h-40 md:h-48 lg:h-56 rounded-lg bg-gray-900/50 overflow-hidden">
+          <Image
+            src={feature.image}
+            alt={feature.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
           />
         </div>
       </CardContent>

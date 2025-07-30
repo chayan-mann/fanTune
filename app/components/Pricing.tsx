@@ -40,7 +40,7 @@ export default function Pricing() {
                 },
                 {
                   name: "Pro",
-                  price: "$9.99",
+                  price: "₹999",
                   period: "/month",
                   description: "For growing communities",
                   features: [
@@ -53,7 +53,7 @@ export default function Pricing() {
                 },
                 {
                   name: "Enterprise",
-                  price: "$29.99",
+                  price: "₹1999",
                   period: "/month",
                   description: "For large streamers",
                   features: ["Unlimited voters", "White-label solution", "API access", "Dedicated support"],
