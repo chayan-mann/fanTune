@@ -1,16 +1,16 @@
 "use client"
 
-import { motion, useScroll, useTransform, useInView } from "framer-motion"
-import { useRef, useEffect, useState } from "react"
+import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
 import { Appbar } from "@/app/components/Appbar"
 import { Redirect } from "@/app/components/Redirect"
-import { TestimonialsSection } from "./components/Reviews"
 import FeaturesSection from "./components/Features"
 import Pricing from "./components/Pricing"
 import CTA from "./components/CTA"
 import Working from "./components/Working"
 import StatsSection from "./components/Stats"
 import HeroSection from "./components/HeroSection"
+import { TestimonialsSection } from "./components/Reviews"
 
 const FloatingParticles = () => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
@@ -65,6 +65,7 @@ export default function MusicStreamingLanding() {
         <StatsSection/>
         <FeaturesSection/>
         <Working/>
+        <TestimonialsSection/>
         <Pricing/>
         <CTA/>
       </main>

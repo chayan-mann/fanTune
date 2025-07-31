@@ -215,17 +215,27 @@
 // }
 
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import type React from "react"
+import { useSession } from "next-auth/react"
 
 import YouTube from "react-youtube"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import { ThumbsUp, ThumbsDown, Play, Share2, Music, Users, Clock, Zap } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Play, Share2, Music, Users, Clock, Zap, Trash2 } from "lucide-react"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import { YT_REGEX } from "../lib/utils"
+
+// Define the data structures for Room and Video
+interface Room {
+  id: string;
+  name: string;
+  admin: { id: string; name: string | null; image: string | null; };
+  streams: Video[];
+  currentStreamId: string | null;
+}
 
 interface Video {
   id: string
@@ -237,109 +247,135 @@ interface Video {
   haveUpvoted: boolean
 }
 
-const REFRESH_INTERVAL_MS = Number(process.env.REFRESH_INTERVAL) || 10000
-
-export default function StreamView({ creatorId }: { creatorId: string }) {
+// Main component that receives initial room data
+export default function StreamView({ initialRoomData }: { initialRoomData: Room }) {
+  const { data: session } = useSession();
   const [inputLink, setInputLink] = useState("")
-  const [queue, setQueue] = useState<Video[]>([])
-  const [currentVideo, setCurrentVideo] = useState<Video | null>(null)
+  const [room, setRoom] = useState<Room>(initialRoomData);
+  const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
 
-  async function refreshStreams() {
+  // Determine if the current user is the admin of this room
+  const isAdmin = session?.user?.id === room.admin.id;
+
+  // A single function to refresh all room data from the server
+  const refreshRoomData = useCallback(async () => {
     try {
-      const res = await fetch(`/api/streams?creatorId=${creatorId}`)
-      if (!res.ok) throw new Error("Failed to fetch queue")
-      const json = await res.json()
-      setQueue(json.streams.sort((a: Video, b: Video) => b.upvotes - a.upvotes))
-    } catch {
-        toast.error("Could not refresh the queue.")
-    }
-  }
-
-  useEffect(() => {
-    refreshStreams()
-    const interval = setInterval(() => {
-      refreshStreams()
-    }, REFRESH_INTERVAL_MS)
-    return () => clearInterval(interval)
-  }, [])
-
-  const playNextVideo = async () => {
-    try {
-      const res = await fetch(`/api/streams/next?creatorId=${creatorId}`)
-      if (!res.ok) {
-        setCurrentVideo(null)
-        return
-      }
-      const { stream } = await res.json()
-      setCurrentVideo(stream)
-      await refreshStreams()
+      const res = await fetch(`/api/rooms/${room.id}`);
+      if (!res.ok) throw new Error("Failed to fetch room data");
+      const updatedRoomData: Room = await res.json();
+      setRoom(updatedRoomData);
     } catch (error) {
-      console.error("Failed to play next video:", error)
-      setCurrentVideo(null)
+      console.error(error);
+      toast.error("Could not refresh the queue.");
     }
-  }
+  }, [room.id]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!inputLink.trim() || !YT_REGEX.test(inputLink)) {
-      toast.error("Please enter a valid YouTube link.")
-      return
+  // Effect to handle polling (will be replaced by real-time subscription)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshRoomData();
+    }, 10000); // Poll every 10 seconds
+    return () => clearInterval(interval);
+  }, [refreshRoomData]);
+
+  // Function for the admin to play the next video
+  const playNextVideo = async () => {
+    if (!isAdmin) {
+      toast.error("Only the admin can play the next song.");
+      return;
     }
     try {
-      const res = await fetch("/api/streams", {
+      const res = await fetch(`/api/rooms/${room.id}/play-next`, { method: "POST" });
+      if (!res.ok) {
+        setCurrentVideo(null);
+        toast.info("The queue is empty!");
+        return;
+      }
+      const { stream } = await res.json();
+      setCurrentVideo(stream);
+      await refreshRoomData();
+    } catch (error) {
+      console.error("Failed to play next video:", error);
+      setCurrentVideo(null);
+    }
+  };
+
+  // Function for any user to add a song to the current room
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputLink.trim() || !YT_REGEX.test(inputLink)) {
+      toast.error("Please enter a valid YouTube link.");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/rooms/${room.id}/streams`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: inputLink }),
-      })
-      if (!res.ok) throw new Error("Failed to add video.")
-      toast.success("Video added to the queue!")
-      setInputLink("")
-      await refreshStreams()
+      });
+      if (!res.ok) throw new Error("Failed to add video.");
+      toast.success("Video added to the queue!");
+      setInputLink("");
+      await refreshRoomData();
     } catch (error) {
-      console.error(error)
-      toast.error("An error occurred while adding the video.")
+      console.error(error);
+      toast.error("An error occurred while adding the video.");
     }
-  }
+  };
 
+  // Function for any user to vote on a song
   const handleVote = async (videoId: string, isUpvote: boolean) => {
     try {
-      const endpoint = isUpvote ? "upvote" : "downvote"
+      const endpoint = isUpvote ? "upvote" : "downvote";
       const res = await fetch(`/api/streams/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ streamId: videoId }),
-      })
-      if (!res.ok) throw new Error("Vote failed.")
-      await refreshStreams()
+      });
+      if (!res.ok) throw new Error("Vote failed.");
+      await refreshRoomData();
     } catch (error) {
-      console.error(error)
-      toast.error("An error occurred while voting.")
+      console.error(error);
+      toast.error("An error occurred while voting.");
     }
-  }
+  };
+  
+  // Function for the admin to delete a song
+  const handleDelete = async (streamId: string) => {
+    if (!isAdmin) return;
+    try {
+        const res = await fetch(`/api/streams/${streamId}`, {
+            method: 'DELETE',
+        });
+        if (!res.ok) throw new Error('Failed to delete stream');
+        toast.success('Song removed from queue.');
+        await refreshRoomData();
+    } catch (error) {
+        console.error(error);
+        toast.error('Failed to remove song.');
+    }
+  };
+
 
   const handleVideoEnd = () => {
-    playNextVideo()
-  }
+    if (isAdmin) {
+      playNextVideo();
+    }
+  };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href).then(
-      () => {
-        toast.success("Link copied to clipboard!")
-      },
+      () => toast.success("Link copied to clipboard!"),
       (err) => {
-        console.error("Could not copy text: ", err)
-        toast.error("Failed to copy link.")
+        console.error("Could not copy text: ", err);
+        toast.error("Failed to copy link.");
       },
-    )
-  }
-
-  useEffect(() => {
-    refreshStreams()
-  }, [creatorId])
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white relative overflow-hidden">
-
+      {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -354,12 +390,13 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
               <Music className="w-8 h-8" />
             </div>
             <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-              MusicQueue
+              {room.name}
             </h1>
           </div>
           <p className="text-xl text-gray-300 font-light">Let the community choose the next song</p>
         </div>
 
+        {/* Add Song Form */}
         <div className="max-w-2xl mx-auto mb-12">
           <form onSubmit={handleSubmit} className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-20"></div>
@@ -384,7 +421,9 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
           </form>
         </div>
 
+        {/* Main Content Grid */}
         <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+          {/* Left Column: Player */}
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
@@ -399,11 +438,7 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
                     <>
                       <YouTube
                         videoId={currentVideo.extractedId}
-                        opts={{
-                          height: "100%",
-                          width: "100%",
-                          playerVars: { autoplay: 1 },
-                        }}
+                        opts={{ height: "100%", width: "100%", playerVars: { autoplay: 1 } }}
                         onEnd={handleVideoEnd}
                         className="w-full h-full rounded-t-2xl"
                       />
@@ -415,7 +450,7 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
                         <Music className="w-12 h-12" />
                       </div>
                       <p className="text-xl font-medium">No song playing</p>
-                      <p className="text-sm text-gray-500 mt-2">{'Click "Play Next" to start the party!'}</p>
+                      <p className="text-sm text-gray-500 mt-2">{isAdmin ? "Click 'Play Next' to start the party!" : "Waiting for the admin to play a song."}</p>
                     </div>
                   )}
                 </div>
@@ -431,25 +466,28 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
               </CardContent>
             </Card>
 
-            <Button
-              onClick={playNextVideo}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white h-14 rounded-xl font-semibold text-lg shadow-lg hover:shadow-green-500/25 transition-all duration-300"
-            >
-              <Play className="mr-3 h-6 w-6" />
-              Play Next Song
-            </Button>
+            {isAdmin && (
+              <Button
+                onClick={playNextVideo}
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white h-14 rounded-xl font-semibold text-lg shadow-lg hover:shadow-green-500/25 transition-all duration-300"
+              >
+                <Play className="mr-3 h-6 w-6" />
+                Play Next Song
+              </Button>
+            )}
           </div>
 
+          {/* Right Column: Queue */}
           <div className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
               <Clock className="w-6 h-6 text-purple-400" />
               <h2 className="text-3xl font-bold text-white">Up Next</h2>
               <div className="flex-1 h-px bg-gradient-to-r from-purple-500/50 to-transparent"></div>
-              <span className="text-sm text-gray-400 bg-slate-800/50 px-3 py-1 rounded-full">{queue.length} songs</span>
+              <span className="text-sm text-gray-400 bg-slate-800/50 px-3 py-1 rounded-full">{room.streams.length} songs</span>
             </div>
 
             <div className="space-y-4 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-              {queue.length === 0 ? (
+              {room.streams.length === 0 ? (
                 <Card className="bg-slate-900/40 backdrop-blur-xl border border-slate-700/30 rounded-xl">
                   <CardContent className="p-8 text-center">
                     <div className="p-4 bg-slate-700/30 rounded-full w-fit mx-auto mb-4">
@@ -460,7 +498,7 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
                   </CardContent>
                 </Card>
               ) : (
-                queue.map((video, index) => (
+                room.streams.map((video, index) => (
                   <Card
                     key={video.id}
                     className="bg-slate-900/40 backdrop-blur-xl border border-slate-700/30 rounded-xl hover:bg-slate-800/50 transition-all duration-300 group"
@@ -468,7 +506,6 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
                         <div className="relative">
-                          <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                           <img
                             src={video.smallImg || "/placeholder.svg"}
                             alt={video.title}
@@ -483,7 +520,6 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
                           <h3 className="font-semibold text-white text-sm line-clamp-2 mb-2 group-hover:text-purple-300 transition-colors">
                             {video.title}
                           </h3>
-
                           <div className="flex items-center justify-between">
                             <Button
                               variant="outline"
@@ -495,17 +531,14 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
                                   : "bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30"
                               }`}
                             >
-                              {video.haveUpvoted ? (
-                                <ThumbsDown className="h-4 w-4" />
-                              ) : (
-                                <ThumbsUp className="h-4 w-4" />
-                              )}
+                              {video.haveUpvoted ? <ThumbsDown className="h-4 w-4" /> : <ThumbsUp className="h-4 w-4" />}
                               <span className="font-semibold">{video.upvotes}</span>
                             </Button>
-
-                            <div className="text-xs text-gray-500">
-                              {video.haveUpvoted ? "You voted" : "Vote to boost"}
-                            </div>
+                            {isAdmin && (
+                                <Button variant="ghost" size="icon" className="text-gray-500 hover:text-red-500" onClick={() => handleDelete(video.id)}>
+                                    <Trash2 className="h-4 w-4"/>
+                                </Button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -523,7 +556,7 @@ export default function StreamView({ creatorId }: { creatorId: string }) {
             className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 hover:bg-slate-700/50 text-white rounded-xl px-8 py-3 font-semibold shadow-lg hover:shadow-slate-500/25 transition-all duration-300"
           >
             <Share2 className="mr-2 h-5 w-5" />
-            Share This Queue
+            Share This Room
           </Button>
         </div>
       </div>

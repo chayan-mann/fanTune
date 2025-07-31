@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 
@@ -15,6 +15,9 @@ model User {
   name          String? 
   emailVerified DateTime? 
   image         String? 
+
+  role          Role    @default(User)
+  rooms         Room[]
 
   accounts Account[]
   sessions Session[]
@@ -72,6 +75,9 @@ model Stream {
   currentStream CurrentStream?
   user          User           @relation(fields: [userId], references: [id])
   upvotes       Upvote[]
+
+  roomId      String // foregin key to room
+  room          Room     @relation(fields: [roomId], references: [id])
 }
 
 model CurrentStream {
@@ -96,7 +102,22 @@ enum StreamType {
 }
 
 enum Role {
-  Streamer
-  EndUser
+  Admin
+  User
 }
 
+model Room{
+  id        String   @id @default(cuid()) 
+  name      String   // A user-friendly name for the room, e.g., "Friday Night Stream"
+  adminId   String   // Foreign key to the User who is the admin
+  admin     User     @relation(fields: [adminId], references: [id])
+  
+  streams   Stream[] // A room has many streams (the queue)
+  
+  // To track the currently playing video for everyone
+  currentStreamId String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
