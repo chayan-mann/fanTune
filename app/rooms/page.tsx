@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/lib/auth";
 import { Role } from "@prisma/client";
 import { CreateRoomButton } from "../components/CreateRoomButton";
+import Image from "next/image";
 
 async function getRooms() {
   const rooms = await prismaClient.room.findMany({
@@ -74,10 +75,13 @@ export default async function RoomsPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={room.admin.image ?? '/images/default-avatar.png'}
-                        alt={room.admin.name ?? 'Admin'}
+                      
+                      <Image
+                        src = {room.admin.image ?? '/images/default-avatar.png'}
+                        alt = {room.admin.name ?? 'Admin'}
                         className="h-10 w-10 rounded-full border-2 border-gray-700"
+                        width={40}
+                        height = {40}
                       />
                       <div>
                         <p className="text-sm text-gray-400">Hosted by</p>

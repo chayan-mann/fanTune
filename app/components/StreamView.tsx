@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import type React from "react"
 import { useSession } from "next-auth/react"
-
+import Image from "next/image"
 import YouTube from "react-youtube"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -292,11 +292,15 @@ export default function StreamView({ initialRoomData }: { initialRoomData: Room 
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4">
                         <div className="relative">
-                          <img
-                            src={video.smallImg || "/placeholder.svg"}
-                            alt={video.title}
+                          
+                          <Image
+                            src = {video.smallImg || "/placeholder.svg"}
+                            alt = {video.title}
                             className="relative w-20 h-14 object-cover rounded-lg shadow-lg"
+                            width={40}
+                            height = {40}
                           />
+
                           <div className="absolute top-1 left-1 bg-slate-900/80 text-white text-xs px-2 py-1 rounded">
                             #{index + 1}
                           </div>
