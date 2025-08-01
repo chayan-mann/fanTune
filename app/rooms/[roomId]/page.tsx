@@ -5,8 +5,6 @@ import { authOptions } from "@/app/lib/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-// This is a Server Component, so we can fetch data directly from the database
-// for better performance, instead of calling our own API route.
 async function getRoomData(roomId: string) {
     const session = await getServerSession(authOptions);
     const viewerId = session?.user?.id;
@@ -32,29 +30,50 @@ async function getRoomData(roomId: string) {
         return null;
     }
 
-    // Format the streams data exactly as the StreamView component expects it
+    // If a current stream ID exists, fetch the full stream object
+    let currentStreamData = null;
+    if (room.currentStreamId) {
+        // Fetch the current stream with its upvote data
+        const currentStream = await prismaClient.stream.findUnique({
+            where: { id: room.currentStreamId },
+            include: {
+                _count: { select: { upvotes: true } },
+                upvotes: viewerId ? { where: { userId: viewerId } } : false,
+            }
+        });
+
+        // Format the current stream to match the Video interface
+        if (currentStream) {
+            const { _count, upvotes, ...rest } = currentStream;
+            currentStreamData = {
+                ...rest,
+                upvotes: _count.upvotes,
+                haveUpvoted: !!(upvotes && upvotes.length > 0),
+            };
+        }
+    }
+
     const formattedStreams = room.streams.map(({ upvotes, _count, ...rest }) => ({
         ...rest,
         upvotes: _count.upvotes,
         haveUpvoted: !!(upvotes && upvotes.length > 0),
     }));
 
-    return { ...room, streams: formattedStreams };
+    return { ...room, streams: formattedStreams, currentStream : currentStreamData };
 }
 
-// Define the props type for Next.js 15+
 type Props = {
   params: Promise<{ roomId: string }>;
 };
 
 export default async function RoomPage({ params }: Props) {
-  // 1. Get the unique roomId from the URL
+  // Get the unique roomId from the URL
   const { roomId } = await params;
   
-  // 2. Fetch the data for ONLY this room
+  // Fetch the data for ONLY this room
   const roomData = await getRoomData(roomId);
 
-  // 3. Handle the case where the room doesn't exist
+  // Handle the case where the room doesn't exist
   if (!roomData) {
       return (
           <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white flex items-center justify-center text-center p-4">
@@ -72,7 +91,7 @@ export default async function RoomPage({ params }: Props) {
       );
   }
 
-  // 4. Pass the room-specific data to your StreamView component
+  // Pass the room-specific data to your StreamView component
   return (
     <div>
       <StreamView initialRoomData={roomData} />

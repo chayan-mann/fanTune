@@ -1,52 +1,72 @@
-
 import { prismaClient } from "@/app/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users } from "lucide-react";
+import { Users, Music} from "lucide-react";
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/lib/auth";
+import { Role } from "@prisma/client";
+import { CreateRoomButton } from "../components/CreateRoomButton";
 
 async function getRooms() {
   const rooms = await prismaClient.room.findMany({
-    // Fetch the most recently created rooms first
-    orderBy: {
-      createdAt: 'desc',
-    },
+    orderBy: { createdAt: 'desc' },
     include: {
-      // Include the admin's public info to display on the card
-      admin: {
-        select: {
-          name: true,
-          image: true,
-        },
-      },
-      // We can also include a count of how many songs are in the queue
-      _count: {
-        select: { streams: true },
-      },
+      admin: { select: { name: true, image: true } },
+      _count: { select: { streams: true } },
     },
   });
   return rooms;
 }
 
+async function getUser() {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return null;
+
+    const user = await prismaClient.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true },
+    });
+    return user;
+}
+
 export default async function RoomsPage() {
   const rooms = await getRooms();
+  const user = await getUser();
+  const isAdmin = user?.role === Role.Admin;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 text-white p-6 pt-24">
-      <div className="container mx-auto max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white relative overflow-hidden p-6 pt-24">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="relative z-10 container mx-auto max-w-5xl">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-            Join a Room
-          </h1>
-          <p className="mt-4 text-lg text-gray-400">
-            Select a room below to start listening and voting with the community.
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full">
+              <Music className="w-8 h-8" />
+            </div>
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+              Join a Room
+            </h1>
+          </div>
+          <p className="text-xl text-gray-300 font-light">
+            Select a room to start listening and voting with the community.
           </p>
         </div>
+        
+        {isAdmin && (
+            <div className="mb-8 flex justify-center">
+                <CreateRoomButton />
+            </div>
+        )}
 
         {rooms.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rooms.map((room) => (
               <Link href={`/rooms/${room.id}`} key={room.id} className="group">
-                <Card className="h-full border-gray-800 bg-black hover:border-purple-500/50 transition-all duration-300 overflow-hidden transform hover:-translate-y-1">
+                <Card className="h-full bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300 hover:-translate-y-2 hover:shadow-purple-500/20">
                   <CardHeader>
                     <CardTitle className="text-xl font-bold text-white truncate group-hover:text-purple-400 transition-colors">
                       {room.name}
@@ -76,10 +96,14 @@ export default async function RoomsPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 px-6 rounded-lg border-2 border-dashed border-gray-800">
+          <div className="text-center py-16 px-6 rounded-2xl border-2 border-dashed border-slate-800 bg-slate-900/40">
+            <div className="p-4 bg-slate-700/30 rounded-full w-fit mx-auto mb-4">
+                <Music className="w-8 h-8 text-gray-400" />
+            </div>
             <h2 className="text-2xl font-semibold text-white">No Rooms Available</h2>
             <p className="mt-2 text-gray-500">
-              It looks like there are no active rooms right now. Admins can create one from their dashboard.
+              It looks like no one is streaming right now.
+              {isAdmin ? " Why don't you create one?" : ""}
             </p>
           </div>
         )}

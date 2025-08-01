@@ -1,220 +1,5 @@
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import YouTube from 'react-youtube';
-// import { Button } from "@/components/ui/button";
-// import { Input } from "@/components/ui/input";
-// import { Card, CardContent } from "@/components/ui/card";
-// import { ThumbsUp, ThumbsDown, Play, Share2 } from "lucide-react";
-// import { toast, ToastContainer } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
-// import { YT_REGEX } from "../lib/utils";
-
-// interface Video {
-//   id: string;
-//   url: string;
-//   extractedId: string;
-//   title: string;
-//   smallImg: string;
-//   upvotes: number;
-//   haveUpvoted: boolean;
-// }
-
-// const REFRESH_INTERVAL_MS = Number(process.env.REFRESH_INTERVAL) || 10000; 
-
-// export default function StreamView({ creatorId }: { creatorId: string }) {
-//   const [inputLink, setInputLink] = useState("");
-//   const [queue, setQueue] = useState<Video[]>([]);
-//   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
-
-
-//   async function refreshStreams() {
-//     try {
-//       const res = await fetch(`/api/streams?creatorId=${creatorId}`);
-//       if (!res.ok) throw new Error("Failed to fetch queue");
-//       const json = await res.json();
-//       setQueue(json.streams.sort((a: any, b: any) => b.upvotes - a.upvotes));
-//     } catch (error) {
-//       console.error(error);
-//       toast.error("Could not refresh the queue.");
-//     }
-//   }
-
-//   useEffect(()=>{
-//     refreshStreams();
-//     const interval = setInterval(()=>{
-//       refreshStreams();
-//     }, REFRESH_INTERVAL_MS);
-//     return () => clearInterval(interval);
-//   }, [])
-
-//   const playNextVideo = async () => {
-//     try {
-//       const res = await fetch(`/api/streams/next?creatorId=${creatorId}`); 
-//       if (!res.ok) {
-//         setCurrentVideo(null); 
-//         return;
-//       }
-//       const { stream } = await res.json();
-//       setCurrentVideo(stream); 
-//       await refreshStreams(); 
-//     } catch (error) {
-//       console.error("Failed to play next video:", error);
-//       setCurrentVideo(null);
-//     }
-//   };
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (!inputLink.trim() || !YT_REGEX.test(inputLink)) {
-//         toast.error("Please enter a valid YouTube link.");
-//         return;
-//     }
-
-//     try {
-//         const res = await fetch("/api/streams", {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ url: inputLink })
-//         });
-
-//         if (!res.ok) throw new Error("Failed to add video.");
-        
-//         toast.success("Video added to the queue!");
-//         setInputLink('');
-//         await refreshStreams();
-//     } catch (error) {
-//         console.error(error);
-//         toast.error("An error occurred while adding the video.");
-//     }
-//   };
-
-//   const handleVote = async (videoId: string, isUpvote: boolean) => {
-//     try {
-//         const endpoint = isUpvote ? "upvote" : "downvote";
-//         const res = await fetch(`/api/streams/${endpoint}`, {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({ streamId: videoId })
-//         });
-//         if (!res.ok) throw new Error("Vote failed.");
-
-//         await refreshStreams();
-//     } catch (error) {
-//         console.error(error);
-//         toast.error("An error occurred while voting.");
-//     }
-//   };
-
-//   const handleVideoEnd = () => {
-//     playNextVideo();
-//   };
-  
-//   const handleShare = () => {
-//     navigator.clipboard.writeText(window.location.href).then(() => {
-//         toast.success("Link copied to clipboard!");
-//     }, (err) => {
-//         console.error("Could not copy text: ", err);
-//         toast.error("Failed to copy link.");
-//     });
-//   };
-
-//   useEffect(() => {
-//     refreshStreams();
-//   }, [creatorId]);
-
-//   return (
-//     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-gray-950 to-gray-900 text-white p-6">
-//       <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-6">
-//         Choose the Next Song
-//       </h1>
-
-//       <form onSubmit={handleSubmit} className="w-full max-w-lg flex gap-3 mb-8">
-//         <Input
-//           type="text"
-//           placeholder="Paste YouTube video link..."
-//           value={inputLink}
-//           onChange={(e) => setInputLink(e.target.value)}
-//           className="flex-1 bg-gray-900 border-gray-800 text-white placeholder-gray-500 focus:ring-purple-500"
-//         />
-//         <Button
-//           type="submit"
-//           className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0"
-//         >
-//           Add to Queue
-//         </Button>
-//       </form>
-
-//       <div className="mt-8 w-full max-w-2xl">
-//         <h2 className="text-2xl font-bold">Now Playing</h2>
-//         <Card className="bg-gray-900 border-gray-800 mt-4 aspect-video">
-//           <CardContent className="p-0 h-full w-full">
-//             {currentVideo ? (
-//               <YouTube
-//                 videoId={currentVideo.extractedId}
-//                 opts={{
-//                   height: '100%',
-//                   width: '100%',
-//                   playerVars: { autoplay: 1 },
-//                 }}
-//                 onEnd={handleVideoEnd}
-//                 className="w-full h-full rounded-lg"
-//               />
-//             ) : (
-//               <div className="flex items-center justify-center h-full text-gray-400">
-//                 <p>Click "Play Next" to start the music.</p>
-//               </div>
-//             )}
-//           </CardContent>
-//         </Card>
-//         {currentVideo && <p className="mt-2 text-center font-semibold">{currentVideo.title}</p>}
-        
-//         <Button onClick={playNextVideo} className="w-full bg-purple-700 hover:bg-purple-800 text-white mt-4">
-//           <Play className="mr-2 h-4 w-4" /> Play Next
-//         </Button>
-//       </div>
-
-//       <div className="mt-10 w-full max-w-2xl">
-//         <h2 className="text-2xl font-bold">Upcoming Songs</h2>
-//         <div className="space-y-4 mt-4">
-//           {queue.map((video) => (
-//             <Card key={video.id} className="bg-gray-900 border-gray-800 text-white">
-//               <CardContent className="p-4 flex items-center gap-4">
-//                 <img
-//                   src={video.smallImg}
-//                   alt={video.title}
-//                   className="w-32 h-18 object-cover rounded"
-//                 />
-//                 <div className="flex-1">
-//                   <p className="font-semibold">{video.title}</p>
-//                   <div className="flex items-center space-x-3 mt-2">
-//                     <Button
-//                       variant="outline"
-//                       size="sm"
-//                       onClick={() => handleVote(video.id, !video.haveUpvoted)}
-//                       className="flex items-center space-x-1 bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
-//                     >
-//                       {video.haveUpvoted ? <ThumbsDown className="h-4 w-4 text-red-500" /> : <ThumbsUp className="h-4 w-4 text-green-500" />}
-//                       <span>{video.upvotes}</span>
-//                     </Button>
-//                   </div>
-//                 </div>
-//               </CardContent>
-//             </Card>
-//           ))}
-//         </div>
-//       </div>
-
-//       <Button onClick={handleShare} className="mt-8 bg-gray-800 hover:bg-gray-700 text-white">
-//         <Share2 className="mr-2 h-4 w-4" /> Share Voting Page
-//       </Button>
-
-//       <ToastContainer theme="dark" position="bottom-right" autoClose={3000} />
-//     </div>
-//   );
-// }
-
 "use client"
+
 import { useEffect, useState, useCallback } from "react"
 import type React from "react"
 import { useSession } from "next-auth/react"
@@ -228,13 +13,13 @@ import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import { YT_REGEX } from "../lib/utils"
 
-// Define the data structures for Room and Video
 interface Room {
   id: string;
   name: string;
   admin: { id: string; name: string | null; image: string | null; };
   streams: Video[];
-  currentStreamId: string | null;
+  currentStream: Video | null; 
+
 }
 
 interface Video {
@@ -252,7 +37,8 @@ export default function StreamView({ initialRoomData }: { initialRoomData: Room 
   const { data: session } = useSession();
   const [inputLink, setInputLink] = useState("")
   const [room, setRoom] = useState<Room>(initialRoomData);
-  const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
+  const [currentVideo, setCurrentVideo] = useState<Video | null>(initialRoomData.currentStream || null);
+
 
   // Determine if the current user is the admin of this room
   const isAdmin = session?.user?.id === room.admin.id;
@@ -327,7 +113,7 @@ export default function StreamView({ initialRoomData }: { initialRoomData: Room 
   const handleVote = async (videoId: string, isUpvote: boolean) => {
     try {
       const endpoint = isUpvote ? "upvote" : "downvote";
-      const res = await fetch(`/api/streams/${endpoint}`, {
+      const res = await fetch(`/api/streams/${videoId}/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ streamId: videoId }),
