@@ -6,6 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/lib/auth";
 import { Role } from "@prisma/client";
 import { CreateRoomButton } from "../components/CreateRoomButton";
+import { DeleteRoomButton } from "../components/DeleteRoomButton";
 import Image from "next/image";
 
 async function getRooms() {
@@ -69,9 +70,14 @@ export default async function RoomsPage() {
               <Link href={`/rooms/${room.id}`} key={room.id} className="group">
                 <Card className="h-full bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300 hover:-translate-y-2 hover:shadow-purple-500/20">
                   <CardHeader>
-                    <CardTitle className="text-xl font-bold text-white truncate group-hover:text-purple-400 transition-colors">
-                      {room.name}
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl font-bold text-white truncate group-hover:text-purple-400 transition-colors">
+                        {room.name}
+                      </CardTitle>
+                        {isAdmin && (
+                          <DeleteRoomButton roomId={room.id} />
+                        )}
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-3">
@@ -94,6 +100,7 @@ export default async function RoomsPage() {
                       <Users className="h-4 w-4" />
                       <span>{room._count.streams} songs in queue</span>
                     </div>
+                    
                   </CardContent>
                 </Card>
               </Link>

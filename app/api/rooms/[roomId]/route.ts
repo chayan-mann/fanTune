@@ -68,3 +68,39 @@ export async function GET(
     return NextResponse.json(response);
 
 }
+
+
+// controller to delete the room 
+export async function DELETE(req: NextRequest, {params} : {params : {roomId: string}}){
+
+    const session = await getServerSession(authOptions);
+    if(!session?.user?.id){
+        return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
+    }
+
+    const roomId = params.roomId;
+    const userId = session.user.id;
+
+    try{
+        const room = await prismaClient.room.findUnique({
+            where : {id : roomId},
+        });
+        
+        if(!room){
+            return NextResponse.json({message : "Room not found"}, {status : 404});
+        }
+
+        if (room.adminId !== userId) {
+            return NextResponse.json({ message: "Forbidden: Only the room admin can delete this room." }, { status: 403 });
+        }
+
+        await prismaClient.room.delete({
+            where: { id: roomId },
+        });
+
+        return NextResponse.json({ message: "Room deleted successfully." });
+    } catch(error){
+        console.log("Delete room error:", error);
+        return NextResponse.json({ message: "An unexpected error occurred." }, { status: 500 });
+    }
+}
