@@ -9,6 +9,8 @@ import { CreateRoomButton } from "../components/CreateRoomButton";
 import { DeleteRoomButton } from "../components/DeleteRoomButton";
 import Image from "next/image";
 
+export const dynamic = 'force-dynamic'
+
 async function getRooms() {
   const rooms = await prismaClient.room.findMany({
     orderBy: { createdAt: 'desc' },
