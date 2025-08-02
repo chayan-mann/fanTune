@@ -3,17 +3,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/lib/auth";
 import { prismaClient } from "@/app/lib/db";
 
-// This route is for an admin to DELETE a song from a queue
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { streamId: string } }
+  context: { params: { streamId: string } }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
   }
 
-  const streamId = params.streamId;
+  const streamId = context.params.streamId;
   const userId = session.user.id;
 
   try {

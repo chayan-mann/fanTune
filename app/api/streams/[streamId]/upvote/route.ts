@@ -5,14 +5,14 @@ import { prismaClient } from "@/app/lib/db";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { streamId: string } }
+  context: { params: { streamId: string } }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
   }
 
-  const streamId = params.streamId;
+  const streamId = context.params.streamId;
   const userId = session.user.id;
 
   try {
@@ -23,7 +23,7 @@ export async function POST(
           streamId: streamId,
         },
       },
-      update: {}, 
+      update: {},
       create: {
         userId: userId,
         streamId: streamId,
