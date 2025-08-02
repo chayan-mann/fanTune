@@ -19,14 +19,14 @@ const youtube = google.youtube({
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { roomId: string } }
+    context: { params: Promise<{ roomId: string }> }
 ) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
         return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
     }
 
-    const roomId = params.roomId;
+    const {roomId} = await context.params
     if (!roomId) {
         return NextResponse.json({ message: "Room ID is required" }, { status: 400 });
     }

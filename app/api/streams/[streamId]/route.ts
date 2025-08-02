@@ -5,14 +5,14 @@ import { prismaClient } from "@/app/lib/db";
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: { streamId: string } }
+  context: { params: Promise<{ streamId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
   }
 
-  const streamId = context.params.streamId;
+  const {streamId} = await context.params;
   const userId = session.user.id;
 
   try {

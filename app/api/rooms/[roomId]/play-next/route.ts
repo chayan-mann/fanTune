@@ -6,15 +6,17 @@ import { Role } from "@prisma/client";
 
 export async function POST(
   req: NextRequest,
-  context: { params: { roomId: string } }
+  // The `params` object is now a Promise
+  context: { params: Promise<{ roomId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
   }
+  const {roomId} = await context.params
 
   const room = await prismaClient.room.findUnique({
-    where: { id: context.params.roomId },
+    where: { id: roomId },
   });
 
   if (room?.adminId !== session.user.id) {
@@ -24,7 +26,7 @@ export async function POST(
   try {
     const mostUpvotedStream = await prismaClient.stream.findFirst({
       where: {
-        roomId: context.params.roomId,
+        roomId: roomId,
         active: true,
       },
       orderBy: {
@@ -36,7 +38,7 @@ export async function POST(
 
     if (!mostUpvotedStream) {
       await prismaClient.room.update({
-        where: { id: context.params.roomId },
+        where: { id: roomId },
         data: { currentStreamId: null },
       });
       return NextResponse.json({ message: "Queue is empty" }, { status: 404 });
@@ -44,7 +46,7 @@ export async function POST(
 
     await prismaClient.$transaction([
       prismaClient.room.update({
-        where: { id: context.params.roomId },
+        where: { id: roomId },
         data: { currentStreamId: mostUpvotedStream.id },
       }),
       prismaClient.stream.update({

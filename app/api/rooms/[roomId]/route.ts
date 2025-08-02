@@ -3,13 +3,17 @@ import { prismaClient } from "@/app/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/lib/auth";
 
-// This route is for getting all the data for a specific room
 
+type RouteContext = {
+  params: Promise<{ roomId: string }>;
+};
+
+// This route is for getting all the data for a specific room
 export async function GET(
     req:NextRequest,
-    {params} : {params : {roomId: string}}
+    context : RouteContext
 ){
-    const roomId = params.roomId;
+    const {roomId} = await context.params
     const session = await getServerSession(authOptions);
     const viewerId = session?.user?.id;
 
@@ -71,14 +75,14 @@ export async function GET(
 
 
 // controller to delete the room 
-export async function DELETE(req: NextRequest, {params} : {params : {roomId: string}}){
+export async function DELETE(req: NextRequest, context : RouteContext){
 
     const session = await getServerSession(authOptions);
     if(!session?.user?.id){
         return NextResponse.json({ message: "Unauthenticated" }, { status: 401 });
     }
 
-    const roomId = params.roomId;
+    const {roomId} = await context.params;
     const userId = session.user.id;
 
     try{
@@ -100,7 +104,6 @@ export async function DELETE(req: NextRequest, {params} : {params : {roomId: str
 
         return NextResponse.json({ message: "Room deleted successfully." });
     } catch(error){
-        console.log("Delete room error:", error);
         return NextResponse.json({ message: "An unexpected error occurred." }, { status: 500 });
     }
 }
