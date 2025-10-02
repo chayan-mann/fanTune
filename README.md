@@ -1,8 +1,8 @@
 # 🎵 fanTune - Your Stream, Their Soundtrack
 
-**fanTune** is a real-time, interactive web application that transforms how content creators engage with their audience through music. It allows streamers to create dedicated music rooms where viewers can collaboratively build a playlist by submitting YouTube links and upvoting their favorite songs.
+**fanTune** is a real-time, interactive web application that transforms how content creators engage with their audience through music. It allows streamers to create dedicated music rooms where viewers[...]
 
-The application features a robust multi-room system, admin controls for queue management, and a sleek, modern interface, all powered by a real-time backend to ensure a perfectly synchronized experience for every user.
+The application features a robust multi-room system, admin controls for queue management, and a sleek, modern interface, all powered by a real-time backend to ensure a perfectly synchronized experienc[...]
 
 **Live Demo:** [fantune.chayanmann.in](https://fantune.chayanmann.in/)
 
@@ -17,6 +17,7 @@ The application features a robust multi-room system, admin controls for queue ma
 - **Secure Authentication:** Users can sign in securely using their Google accounts, managed by NextAuth.js.
 - **Protected Routes:** Only authenticated users can access rooms, and only admins can create them, thanks to Next.js Middleware.
 - **Sleek & Responsive UI:** A modern, dark-themed interface built with Tailwind CSS that looks great on both desktop and mobile devices.
+- **Dockerized Deployment:** Easily run the application anywhere using Docker for a consistent and simplified deployment experience.
 
 ---
 
@@ -28,7 +29,7 @@ The application features a robust multi-room system, admin controls for queue ma
 - **Authentication:** [NextAuth.js](https://next-auth.js.org/)
 - **Database & ORM:** [PostgreSQL](https://www.postgresql.org/) on [Supabase](https://supabase.com/) with [Prisma](https://www.prisma.io/)
 - **Real-time:** [Supabase Realtime](https://supabase.com/docs/guides/realtime)
-- **Deployment:** [Vercel](https://vercel.com/)
+- **Deployment:** [Vercel](https://vercel.com/), **Docker**
 
 ---
 
@@ -38,13 +39,14 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 ### Prerequisites
 
-- Node.js (v18 or later)
-- npm or yarn
+- Node.js (v18 or later) **(if not using Docker)**
+- npm or yarn **(if not using Docker)**
+- Docker & Docker Compose **(for containerized setup)**
 - A local PostgreSQL instance or a free Supabase project
 - A Google Cloud project for OAuth credentials
 - A YouTube Data API Key
 
-### Installation & Setup
+### Installation & Setup (Non-Docker)
 
 1.  **Clone the repository:**
     ```bash
@@ -59,13 +61,45 @@ Follow these instructions to get a copy of the project up and running on your lo
     ```
 
 3.  **Set up your environment variables:**
-    Create a file named `.env.local` in the root of the project and add the following variables mentioned in the `.env.sample file` in the root directory of this repository.
+    Create a file named `.env.local` in the root of the project and add the variables mentioned in the `.env.sample` file in the root directory of this repository.
 
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
 
 The application should now be running at [http://localhost:3000](http://localhost:3000).
 
 ---
 
+### 🚢 Dockerized Setup
+
+A Dockerfile and optional `docker-compose.yml` are provided to make running the app even easier.
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/chayan-mann/fanTune.git
+    cd fanTune
+    ```
+
+2.  **Create your environment file:**
+    - Copy `.env.sample` to `.env.local` and fill in the required environment variables.
+
+3.  **Build and run using Docker:**
+    ```bash
+    docker build -t fantune .
+    docker run --env-file .env.local -p 3000:3000 fantune
+    ```
+
+    _Or, with Docker Compose (if a `docker-compose.yml` is present):_
+    ```bash
+    docker-compose up --build
+    ```
+
+4.  **Access the app:**
+    - Visit [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
 
 ## 📜 License
 
