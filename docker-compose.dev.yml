@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: fantune-postgres-dev
+    environment:
+      POSTGRES_DB: fantune_dev
+      POSTGRES_USER: fantune_user
+      POSTGRES_PASSWORD: fantune_password
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fantune_user -d fantune_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # fanTune App (Development mode)
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: fantune-app-dev
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://fantune_user:fantune_password@postgres:5432/fantune_dev
+      - DIRECT_URL=postgresql://fantune_user:fantune_password@postgres:5432/fantune_dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:
